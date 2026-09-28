@@ -36,4 +36,4 @@ Su Linux o macOS con Mono:
 mcs -target:winexe -sdk:4.5 -optimize+ -win32icon:src/MouseMover.ico -r:System.Windows.Forms.dll -r:System.Drawing.dll -out:MouseMover.exe src/MouseMover.cs
 ```
 
-Ogni push su `main` compila l'exe con GitHub Actions. Un tag `v*` pubblica anche una release con l'exe allegato.
+Ogni push su `main` compila l'exe con GitHub Actions. Per pubblicare una release con l'exe allegato: Actions → Build → Run workflow, indicando la versione (es. `v1.1.0`). Anche un tag `v*` pubblica una release.
