@@ -1,6 +1,7 @@
 # Mouse Mover
 
-Piccola app per Windows che mantiene lo stato di Microsoft Teams su "Disponibile".
+Piccola app per Windows che tiene il PC sveglio: finché è attiva, Windows non va in standby
+e non spegne lo schermo, e il tuo stato nelle app di chat resta "attivo".
 Un solo file `.exe` di circa 20 KB: nessuna installazione e nessun permesso di amministratore.
 
 ## Come si usa
@@ -18,7 +19,7 @@ Clicca "Ulteriori informazioni" e poi "Esegui comunque".
 - Ogni 30 secondi controlla da quanto tempo non usi mouse e tastiera.
 - Se sei inattivo da almeno 60 secondi, preme F15 (un tasto che nessun programma usa)
   e sposta il mouse di 1 pixel avanti e indietro. Mentre lavori non fa nulla.
-- Finché è attivo, impedisce a Windows di andare in standby o spegnere lo schermo.
+- Finché è attivo, Windows non va in standby e non spegne lo schermo.
 - "Avvia con Windows" scrive solo nella chiave utente `HKCU\...\Run`, senza permessi di amministratore.
 - Gira con il .NET Framework 4 già incluso in Windows 10 e 11.
 
