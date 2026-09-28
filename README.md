@@ -1,4 +1,4 @@
-# Mouse Mover
+# Mover
 
 A tiny Windows app that keeps your PC awake: while it is running, Windows does not go to sleep
 or turn off the screen, and your status in chat apps stays "active".
@@ -6,10 +6,10 @@ A single `.exe` of about 20 KB: no installation and no administrator rights requ
 
 ## Usage
 
-1. Download `MouseMover.exe` from the [Releases](../../releases) page and double-click it.
+1. Download `Mover.exe` from the [Releases](../../releases) page and double-click it.
 2. A green icon appears in the system tray, next to the clock. No window opens.
 3. Double-click the icon to pause (grey) or resume (green).
-4. Right-click the icon for the menu: **Metti in pausa** (pause), **Avvia con Windows** (start with Windows), **Esci** (exit).
+4. Right-click the icon for the menu: **Pause**, **Start with Windows**, **Exit**.
 
 The exe is not signed, so on first launch Windows may show "Windows protected your PC".
 Click "More info" and then "Run anyway".
@@ -28,13 +28,13 @@ Click "More info" and then "Run anyway".
 On Windows, with nothing to install:
 
 ```bat
-%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /optimize+ /win32icon:src\MouseMover.ico /out:MouseMover.exe src\MouseMover.cs
+%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /optimize+ /win32icon:src\Mover.ico /out:Mover.exe src\Mover.cs
 ```
 
 On Linux or macOS with Mono:
 
 ```sh
-mcs -target:winexe -sdk:4.5 -optimize+ -win32icon:src/MouseMover.ico -r:System.Windows.Forms.dll -r:System.Drawing.dll -out:MouseMover.exe src/MouseMover.cs
+mcs -target:winexe -sdk:4.5 -optimize+ -win32icon:src/Mover.ico -r:System.Windows.Forms.dll -r:System.Drawing.dll -out:Mover.exe src/Mover.cs
 ```
 
 Every push to `main` builds the exe with GitHub Actions. To publish a release with the exe attached,

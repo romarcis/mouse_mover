@@ -7,8 +7,8 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      versione:
-        description: 'Versione da pubblicare come release (es. v1.0.0). Vuoto = solo build.'
+      version:
+        description: 'Version to publish as a release (e.g. v1.1.0). Empty = build only.'
         required: false
 
 permissions:
@@ -20,24 +20,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compila MouseMover.exe
+      - name: Build Mover.exe
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force bin | Out-Null
           & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo /target:winexe /optimize+ `
-            /win32icon:src\MouseMover.ico /out:bin\MouseMover.exe src\MouseMover.cs
+            /win32icon:src\Mover.ico /out:bin\Mover.exe src\Mover.cs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Get-Item bin\MouseMover.exe | Select-Object Name, Length
+          Get-Item bin\Mover.exe | Select-Object Name, Length
 
       - uses: actions/upload-artifact@v4
         with:
-          name: MouseMover
-          path: bin/MouseMover.exe
+          name: Mover
+          path: bin/Mover.exe
 
-      - name: Pubblica la release
-        if: startsWith(github.ref, 'refs/tags/v') || inputs.versione != ''
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.version != ''
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSIONE: ${{ inputs.versione || github.ref_name }}
-        run: gh release create "$env:VERSIONE" bin/MouseMover.exe --target "${{ github.sha }}" --title "Mouse Mover $env:VERSIONE" --generate-notes
+          VERSION: ${{ inputs.version || github.ref_name }}
+        run: gh release create "$env:VERSION" bin/Mover.exe --target "${{ github.sha }}" --title "Mover $env:VERSION" --generate-notes

@@ -1,9 +1,9 @@
-// Mouse Mover - mantiene lo stato di Teams "Disponibile".
-// Eseguibile portatile: nessuna installazione, nessun permesso di amministratore.
-// Vive nella tray: doppio clic = pausa/riprendi, tasto destro = menu con Esci.
+// Mover - keeps the PC awake and your status active.
+// Portable executable: no installation, no administrator rights.
+// Lives in the system tray: double-click = pause/resume, right-click = menu with Exit.
 //
-// Compilazione (Mono):  mcs -target:winexe -win32icon:MouseMover.ico -r:System.Windows.Forms.dll -r:System.Drawing.dll -out:MouseMover.exe MouseMover.cs
-// Compilazione (Windows, .NET Framework):  %WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /win32icon:MouseMover.ico /out:MouseMover.exe MouseMover.cs
+// Build (Mono):  mcs -target:winexe -win32icon:Mover.ico -r:System.Windows.Forms.dll -r:System.Drawing.dll -out:Mover.exe Mover.cs
+// Build (Windows, .NET Framework):  %WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:winexe /win32icon:Mover.ico /out:Mover.exe Mover.cs
 
 using System;
 using System.Drawing;
@@ -14,9 +14,9 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-[assembly: AssemblyTitle("Mouse Mover")]
-[assembly: AssemblyProduct("Mouse Mover")]
-[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyTitle("Mover")]
+[assembly: AssemblyProduct("Mover")]
+[assembly: AssemblyVersion("1.1.0.0")]
 
 static class Native
 {
@@ -55,110 +55,110 @@ static class Native
 
 class TrayApp : ApplicationContext
 {
-    const int SogliaSecondi = 60;       // inattivita' minima prima di simulare attivita'
-    const int ControlloMs = 30000;      // ogni quanto controllare
+    const int IdleThresholdSeconds = 60;       // minimum idle time before simulating activity
+    const int CheckIntervalMs = 30000;      // how often to check
     const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    const string RunName = "MouseMover";
+    const string RunName = "Mover";
 
-    readonly NotifyIcon icona = new NotifyIcon();
+    readonly NotifyIcon trayIcon = new NotifyIcon();
     readonly System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-    readonly ToolStripMenuItem voceToggle;
-    readonly ToolStripMenuItem voceAvvio;
-    readonly Icon iconaAttiva = CreaIcona(Color.FromArgb(46, 160, 67));
-    readonly Icon iconaPausa = CreaIcona(Color.FromArgb(140, 140, 140));
-    bool attivo = true;
+    readonly ToolStripMenuItem toggleItem;
+    readonly ToolStripMenuItem startupItem;
+    readonly Icon activeIcon = CreateIcon(Color.FromArgb(46, 160, 67));
+    readonly Icon pausedIcon = CreateIcon(Color.FromArgb(140, 140, 140));
+    bool active = true;
 
     public TrayApp()
     {
         ContextMenuStrip menu = new ContextMenuStrip();
-        ToolStripMenuItem titolo = new ToolStripMenuItem("Mouse Mover");
-        titolo.Enabled = false;
-        menu.Items.Add(titolo);
+        ToolStripMenuItem titleItem = new ToolStripMenuItem("Mover");
+        titleItem.Enabled = false;
+        menu.Items.Add(titleItem);
         menu.Items.Add(new ToolStripSeparator());
-        voceToggle = new ToolStripMenuItem("Metti in pausa", null, delegate { Cambia(); });
-        menu.Items.Add(voceToggle);
-        voceAvvio = new ToolStripMenuItem("Avvia con Windows", null, delegate { CambiaAvvio(); });
-        voceAvvio.Checked = AvvioAttivo();
-        menu.Items.Add(voceAvvio);
+        toggleItem = new ToolStripMenuItem("Pause", null, delegate { Toggle(); });
+        menu.Items.Add(toggleItem);
+        startupItem = new ToolStripMenuItem("Start with Windows", null, delegate { ToggleStartup(); });
+        startupItem.Checked = IsStartupEnabled();
+        menu.Items.Add(startupItem);
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(new ToolStripMenuItem("Esci", null, delegate { Esci(); }));
+        menu.Items.Add(new ToolStripMenuItem("Exit", null, delegate { Exit(); }));
 
-        icona.ContextMenuStrip = menu;
-        icona.DoubleClick += delegate { Cambia(); };
-        icona.Visible = true;
+        trayIcon.ContextMenuStrip = menu;
+        trayIcon.DoubleClick += delegate { Toggle(); };
+        trayIcon.Visible = true;
 
-        timer.Interval = ControlloMs;
+        timer.Interval = CheckIntervalMs;
         timer.Tick += delegate
         {
-            if (attivo && Native.IdleSeconds() >= SogliaSecondi) Native.Nudge();
+            if (active && Native.IdleSeconds() >= IdleThresholdSeconds) Native.Nudge();
         };
         timer.Start();
 
-        Aggiorna();
-        icona.ShowBalloonTip(2000, "Mouse Mover", "In funzione. Tasto destro sull'icona per le opzioni.", ToolTipIcon.None);
+        UpdateState();
+        trayIcon.ShowBalloonTip(2000, "Mover", "Running. Right-click the icon for options.", ToolTipIcon.None);
     }
 
-    void Aggiorna()
+    void UpdateState()
     {
-        Native.StayAwake(attivo);
-        icona.Icon = attivo ? iconaAttiva : iconaPausa;
-        icona.Text = attivo ? "Mouse Mover: in funzione" : "Mouse Mover: in pausa";
-        voceToggle.Text = attivo ? "Metti in pausa" : "Riprendi";
+        Native.StayAwake(active);
+        trayIcon.Icon = active ? activeIcon : pausedIcon;
+        trayIcon.Text = active ? "Mover: running" : "Mover: paused";
+        toggleItem.Text = active ? "Pause" : "Resume";
     }
 
-    void Cambia()
+    void Toggle()
     {
-        attivo = !attivo;
-        Aggiorna();
+        active = !active;
+        UpdateState();
     }
 
-    static bool AvvioAttivo()
+    static bool IsStartupEnabled()
     {
         using (RegistryKey k = Registry.CurrentUser.OpenSubKey(RunKey))
             return k != null && k.GetValue(RunName) != null;
     }
 
-    void CambiaAvvio()
+    void ToggleStartup()
     {
         try
         {
             using (RegistryKey k = Registry.CurrentUser.CreateSubKey(RunKey))
             {
-                if (AvvioAttivo()) k.DeleteValue(RunName, false);
+                if (IsStartupEnabled()) k.DeleteValue(RunName, false);
                 else k.SetValue(RunName, "\"" + Application.ExecutablePath + "\"");
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show("Impossibile modificare l'avvio automatico:\n" + ex.Message, "Mouse Mover");
+            MessageBox.Show("Could not change the startup setting:\n" + ex.Message, "Mover");
         }
-        voceAvvio.Checked = AvvioAttivo();
+        startupItem.Checked = IsStartupEnabled();
     }
 
-    void Esci()
+    void Exit()
     {
         timer.Stop();
         Native.StayAwake(false);
-        icona.Visible = false;
-        icona.Dispose();
+        trayIcon.Visible = false;
+        trayIcon.Dispose();
         ExitThread();
     }
 
-    static Icon CreaIcona(Color colore)
+    static Icon CreateIcon(Color color)
     {
         using (Bitmap bmp = new Bitmap(32, 32))
         using (Graphics g = Graphics.FromImage(bmp))
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.Transparent);
-            using (SolidBrush b = new SolidBrush(colore)) g.FillEllipse(b, 2, 2, 28, 28);
+            using (SolidBrush b = new SolidBrush(color)) g.FillEllipse(b, 2, 2, 28, 28);
             using (Pen p = new Pen(Color.White, 4)) g.DrawLines(p, new Point[] { new Point(9, 16), new Point(14, 21), new Point(23, 11) });
             IntPtr h = bmp.GetHicon();
             Icon tmp = Icon.FromHandle(h);
-            Icon copia = (Icon)tmp.Clone();
+            Icon copy = (Icon)tmp.Clone();
             tmp.Dispose();
             try { Native.DestroyIcon(h); } catch (EntryPointNotFoundException) { }
-            return copia;
+            return copy;
         }
     }
 }
@@ -168,12 +168,12 @@ static class Program
     [STAThread]
     static void Main()
     {
-        bool nuovo;
-        using (Mutex m = new Mutex(true, @"Local\MouseMover_Mutex", out nuovo))
+        bool createdNew;
+        using (Mutex m = new Mutex(true, @"Local\Mover_Mutex", out createdNew))
         {
-            if (!nuovo)
+            if (!createdNew)
             {
-                MessageBox.Show("Mouse Mover e' gia' in esecuzione (guarda nella tray, vicino all'orologio).", "Mouse Mover");
+                MessageBox.Show("Mover is already running (look in the system tray, next to the clock).", "Mover");
                 return;
             }
             Application.EnableVisualStyles();
